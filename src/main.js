@@ -54,10 +54,13 @@ const cameras = new Cameras(camera, car.group, car.instruments.driverEye);
 
 // --- Input ----------------------------------------------------------------
 const keys = new Set();
+const CONTROL_KEYS = ['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' ', 'enter'];
+
 addEventListener('keydown', (e) => {
   const k = e.key.toLowerCase();
   if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(k)) e.preventDefault();
-  if (k === 'c') cameras.toggle();
+  if (mode === 'intro' && CONTROL_KEYS.includes(k)) startDrive();
+  if (k === 'c' && mode === 'drive') cameras.toggle();
   if (k === 'r') location.reload();
   keys.add(k);
 });
@@ -89,7 +92,44 @@ let nextBeat = 0;
 const subtitle = document.getElementById('subtitle');
 let subtitleUntil = 0;
 
+// --- Intro ----------------------------------------------------------------
+// The scene runs behind the title card so the first thing anyone sees is the
+// road itself, not a loading screen.
+let mode = 'intro';
+let introT = 0;
+const NO_INPUT = { throttle: 0, brake: 0, steer: 0 };
+
+function startDrive() {
+  if (mode === 'drive') return;
+  mode = 'drive';
+  document.body.classList.add('driving');
+  clock.getDelta();
+}
+window.__startDrive = startDrive;
+
+function introCamera(dt) {
+  introT += dt;
+  // Slow arc around the parked car, drifting from the front wing to the flank.
+  const a = -0.55 + introT * 0.045;
+  const r = 9.4 - Math.min(introT, 22) * 0.09;
+  const p = vehicle.position;
+  camera.position.set(
+    p.x + Math.cos(vehicle.heading + a) * r,
+    p.y + 2.35 + Math.sin(introT * 0.12) * 0.25,
+    p.z + Math.sin(vehicle.heading + a) * r
+  );
+  camera.lookAt(p.x, p.y + 0.85, p.z);
+  camera.fov = 40;
+  camera.updateProjectionMatrix();
+}
+
 // --- Loop -----------------------------------------------------------------
+document.getElementById('start')?.addEventListener('click', () => {
+  startDrive();
+  window.focus();
+});
+renderer.domElement.addEventListener('pointerdown', startDrive);
+
 const clock = new THREE.Clock();
 let elapsed = 0;
 const hud = document.getElementById('hud');
@@ -100,12 +140,13 @@ function frame() {
   const dt = Math.min(clock.getDelta(), 1 / 20);
   elapsed += dt;
 
-  vehicle.update(dt, readInput());
+  vehicle.update(dt, mode === 'drive' ? readInput() : NO_INPUT);
   vehicle.applyTo(car.group, car.wheels);
   car.instruments.update(vehicle.speedKmh, vehicle.metresThisFrame, elapsed);
 
   scene.updateMatrixWorld();
-  cameras.update(dt, vehicle);
+  if (mode === 'drive') cameras.update(dt, vehicle);
+  else introCamera(dt);
 
   ridges.position.set(vehicle.position.x, vehicle.position.y - 6, vehicle.position.z);
 
@@ -115,7 +156,7 @@ function frame() {
   sun.target.updateMatrixWorld();
 
   // Fire any beat the car has driven past.
-  while (nextBeat < BEATS.length && vehicle.legDistance >= BEATS[nextBeat].at) {
+  while (mode === 'drive' && nextBeat < BEATS.length && vehicle.legDistance >= BEATS[nextBeat].at) {
     subtitle.textContent = BEATS[nextBeat].text;
     subtitle.classList.add('visible');
     subtitleUntil = elapsed + 6;

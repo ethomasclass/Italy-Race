@@ -36,6 +36,13 @@
   }
   #subtitle.visible { opacity: .95; }
 
+  #hint {
+    position: absolute; left: 50%; bottom: 46px; transform: translateX(-50%);
+    font-size: 11px; letter-spacing: .18em; text-transform: uppercase; opacity: .7;
+    transition: opacity .5s ease;
+  }
+  body.driving #hint { opacity: 0; }
+
   #status {
     position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
     font-size: 12px; letter-spacing: .18em; text-transform: uppercase; opacity: .8;
@@ -48,6 +55,7 @@
     <div id="hud"></div>
     <div id="subtitle"></div>
     <div id="keys">W / S &nbsp; throttle · brake<br>A / D &nbsp; steer<br>C &nbsp; chase ⇄ cockpit<br>R &nbsp; restart</div>
+    <div id="hint">Press any control to drive</div>
   </div>
   <script type="module" src="/src/main.js"></script>
 </body>

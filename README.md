@@ -71,6 +71,13 @@ src/
 
 `window.__dbg` exposes the scene, road, terrain and vehicle for poking from the console.
 
+## Publishing
+
+`./artifact/build.sh` assembles `dist/his-fathers-car.html` — a single self-contained
+file with the whole Three.js bundle inlined, no CDN dependency. `artifact/shell-head.html`
+holds the title card and page chrome; `artifact/shell-tail.html` enables the start
+button once the scene module has finished building the leg.
+
 ## Known limitations
 
 - No outline pass and no 1957 dither shader yet — the toon ramp is a placeholder for

@@ -1,0 +1,16 @@
+</script>
+
+<script type="module">
+  // Runs after the scene module above has finished building the leg.
+  const start = document.getElementById('start');
+  start.disabled = false;
+  start.textContent = 'Drive';
+
+  // Enter starts the leg too, so the page is usable without a pointer.
+  addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !document.body.classList.contains('driving')) {
+      e.preventDefault();
+      start.click();
+    }
+  });
+</script>

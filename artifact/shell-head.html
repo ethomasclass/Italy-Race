@@ -1,0 +1,256 @@
+<title>His Father's Car</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@500;600&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,300&display=swap">
+
+<style>
+  /* Single, deliberate visual world: the game paints its own sky and haze, so the
+     frame around it is a dark cinema rather than a themed document. Every colour
+     is painted explicitly so the page holds on any host ground. */
+  :root {
+    --ink:      #0f0e0c;   /* warm near-black */
+    --ink-2:    #191713;
+    --haze:     #cbc7b1;   /* lifted from the game's own fog colour */
+    --dim:      #8a866f;
+    --dimmer:   #5f5c4e;
+    --gold:     #a3a166;   /* dry grass */
+    --corno:    #a8322a;   /* the charm on the mirror — used once */
+    --focus:    #6f9bc4;   /* the game's sky blue */
+
+    --serif: "Newsreader", Georgia, "Times New Roman", serif;
+    --label: "Archivo Narrow", "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    overflow: hidden;
+    background: var(--ink);
+    color: var(--haze);
+    font-family: var(--serif);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  canvas { position: fixed; inset: 0; z-index: 0; display: block; }
+
+  #ui {
+    position: fixed; inset: 0; z-index: 10;
+    pointer-events: none;
+  }
+
+  /* Scrim: dark in the lower-left where the title sits, clear at the upper-right
+     so the landscape still reads. */
+  #scrim {
+    position: absolute; inset: 0;
+    background:
+      linear-gradient(to top, rgba(15,14,12,.94) 0%, rgba(15,14,12,.72) 26%, rgba(15,14,12,0) 62%),
+      linear-gradient(to right, rgba(15,14,12,.80) 0%, rgba(15,14,12,.25) 42%, rgba(15,14,12,0) 72%);
+    transition: opacity .9s ease;
+  }
+
+  /* ---- Title card: composed like a film title, low and left ---- */
+  #card {
+    position: absolute;
+    left: clamp(24px, 5.5vw, 84px);
+    bottom: clamp(28px, 7vh, 76px);
+    max-width: 46ch;
+    pointer-events: auto;
+    transition: opacity .55s ease, transform .55s ease;
+  }
+
+  .eyebrow {
+    margin: 0 0 14px;
+    font-family: var(--label);
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+  .eyebrow::after {
+    content: "";
+    display: block;
+    width: 34px; height: 2px;
+    margin-top: 12px;
+    background: var(--corno);
+  }
+
+  h1 {
+    margin: 0;
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: clamp(2.7rem, 6.4vw, 4.6rem);
+    line-height: .96;
+    letter-spacing: -.022em;
+    text-wrap: balance;
+    color: #e8e4d2;
+  }
+
+  .standfirst {
+    margin: 18px 0 0;
+    font-size: 1.06rem;
+    font-style: italic;
+    font-weight: 300;
+    color: var(--haze);
+  }
+
+  .note {
+    margin: 14px 0 0;
+    max-width: 42ch;
+    font-size: .93rem;
+    line-height: 1.62;
+    color: var(--dim);
+  }
+
+  .start-row {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-top: 30px;
+  }
+
+  #start {
+    font-family: var(--label);
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: var(--haze);
+    border: 0;
+    padding: 13px 30px;
+    cursor: pointer;
+    transition: background .18s ease, color .18s ease, opacity .18s ease;
+  }
+  #start:hover:not(:disabled) { background: #ffffff; }
+  #start:disabled { opacity: .38; cursor: default; }
+  #start:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+
+  #status {
+    font-family: var(--label);
+    font-size: 11px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--dimmer);
+  }
+
+  /* ---- Key legend ---- */
+  .keys {
+    display: grid;
+    grid-template-columns: repeat(2, auto);
+    justify-content: start;
+    gap: 7px 30px;
+    margin: 30px 0 0;
+    padding-top: 20px;
+    border-top: 1px solid rgba(203,199,177,.16);
+  }
+  .keys > div { display: flex; align-items: baseline; gap: 11px; }
+  .keys dt {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--haze);
+    min-width: 3.4em;
+  }
+  .keys dd {
+    margin: 0;
+    white-space: nowrap;
+    font-family: var(--label);
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--dimmer);
+  }
+
+  /* ---- In-drive chrome ---- */
+  #hud, #legend {
+    position: absolute;
+    bottom: 22px;
+    opacity: 0;
+    transition: opacity .7s ease .25s;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--haze);
+    text-shadow: 0 1px 4px rgba(0,0,0,.7);
+    font-variant-numeric: tabular-nums;
+  }
+  #hud { left: 24px; letter-spacing: .03em; }
+  #hud b { font-weight: 600; font-size: 14px; }
+  #hud i { font-style: normal; color: var(--gold); }
+  #hud span { display: inline-block; width: 20px; }
+
+  #legend {
+    right: 24px;
+    text-align: right;
+    font-family: var(--label);
+    font-size: 10px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--dimmer);
+    line-height: 1.9;
+  }
+
+  #subtitle {
+    position: absolute;
+    left: 50%;
+    bottom: 74px;
+    transform: translateX(-50%) translateY(6px);
+    width: min(72ch, 84vw);
+    text-align: center;
+    font-size: clamp(1rem, 1.5vw, 1.18rem);
+    font-weight: 300;
+    line-height: 1.5;
+    color: #e8e4d2;
+    text-shadow: 0 2px 10px rgba(0,0,0,.85);
+    opacity: 0;
+    transition: opacity .6s ease, transform .6s ease;
+  }
+  #subtitle.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ---- Driving state ---- */
+  body.driving #scrim { opacity: 0; }
+  body.driving #card { opacity: 0; transform: translateY(10px); pointer-events: none; }
+  body.driving #hud,
+  body.driving #legend { opacity: 1; }
+
+  @media (max-width: 640px) {
+    .note, .keys { display: none; }
+    #legend { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #scrim, #card, #hud, #legend, #subtitle { transition-duration: .01ms; }
+  }
+</style>
+
+<div id="ui">
+  <div id="scrim"></div>
+
+  <div id="card">
+    <p class="eyebrow">Mille Miglia game · Prototype</p>
+    <h1>His Father's Car</h1>
+    <p class="standfirst">Leg one of eight. Hill road south of Siena, May 1984.</p>
+    <p class="note">
+      Two brothers drive their late father's car along the old Mille Miglia route.
+      There is no goal and no way to fail. The road runs 1.8&nbsp;km, the car wallows,
+      and the odometer starts on his mileage rather than theirs.
+    </p>
+    <div class="start-row">
+      <button id="start" disabled>Generating</button>
+      <span id="status"></span>
+    </div>
+    <dl class="keys">
+      <div><dt>W / S</dt><dd>Throttle · brake</dd></div>
+      <div><dt>A / D</dt><dd>Steer</dd></div>
+      <div><dt>C</dt><dd>Camera</dd></div>
+      <div><dt>R</dt><dd>Restart</dd></div>
+    </dl>
+  </div>
+
+  <div id="hud"></div>
+  <div id="legend">W / S &nbsp;throttle · brake<br>A / D &nbsp;steer<br>C &nbsp;chase ⇄ cockpit<br>R &nbsp;restart</div>
+  <div id="subtitle"></div>
+</div>
+
+<script type="module">
