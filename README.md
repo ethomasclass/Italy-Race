@@ -122,6 +122,9 @@ Two things that cost real time and are worth knowing:
 - Facial features must be placed against the computed ellipsoid surface, not
   eyeballed. An earlier pass had the mouth 8 mm inside the jaw and the iris 5 mm
   proud of the eye; both are invisible in code and obvious on screen.
+- The figure faces -X, so on every `RoundedBoxGeometry` the first argument is
+  **depth** and the third is **width**. Getting those the wrong way round built a
+  torso half again deeper than it was wide, and a head to match.
 
 ## Known limitations
 

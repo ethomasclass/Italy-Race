@@ -41,10 +41,10 @@ const SKELETON = {
   chest:     { parent: 'spine',  at: [-0.012, 0.215, 0] },
   neck:      { parent: 'chest',  at: [-0.012, 0.235, 0] },
   head:      { parent: 'neck',   at: [0.004, 0.092, 0] },
-  shoulderL: { parent: 'chest',  at: [-0.012, 0.150, -0.156] },
+  shoulderL: { parent: 'chest',  at: [-0.008, 0.148, -0.170] },
   elbowL:    { parent: 'shoulderL', at: [0, -0.285, 0] },
   wristL:    { parent: 'elbowL',    at: [0, -0.250, 0] },
-  shoulderR: { parent: 'chest',  at: [-0.012, 0.150, 0.156] },
+  shoulderR: { parent: 'chest',  at: [-0.008, 0.148, 0.170] },
   elbowR:    { parent: 'shoulderR', at: [0, -0.285, 0] },
   wristR:    { parent: 'elbowR',    at: [0, -0.250, 0] },
   hipL:      { parent: 'pelvis', at: [-0.010, -0.030, -0.085] },
@@ -119,13 +119,13 @@ function buildHead(mat) {
   const put = (m, x, y, z) => { m.position.set(x, y, z); m.castShadow = true; g.add(m); return m; };
 
   const skull = new THREE.Mesh(new THREE.SphereGeometry(0.100, 18, 14), mat.skin);
-  skull.scale.set(0.94, 1.02, 0.90);
+  skull.scale.set(0.98, 1.02, 0.77);
   put(skull, -0.004, 0.022, 0);
 
   // Jaw shares the skull's width and tucks under it, in a slightly darker tone so
   // the beard line reads without a texture.
   const jaw = new THREE.Mesh(new THREE.SphereGeometry(0.082, 14, 12), mat.stubble);
-  jaw.scale.set(0.86, 0.68, 0.82);
+  jaw.scale.set(0.88, 0.68, 0.73);
   put(jaw, -0.020, -0.038, 0);
 
   // Feature placement is computed against the ellipsoid surfaces above, not eyeballed:
@@ -136,7 +136,7 @@ function buildHead(mat) {
   nose.rotation.z = -Math.PI / 2;
   nose.rotation.y = Math.PI / 4;
   nose.scale.set(1, 0.58, 0.72);
-  put(nose, -0.094, 0.008, 0);           // base on the skull at -0.0973, tip proud
+  put(nose, -0.098, 0.008, 0);           // skull surface here is -0.1011
 
   for (const s of [-1, 1]) {
     // One dark almond, flush with the skull. Splitting it into white plus iris made
@@ -144,36 +144,36 @@ function buildHead(mat) {
     const eye = new THREE.Mesh(new THREE.SphereGeometry(0.016, 10, 8), mat.iris);
     eye.scale.set(0.22, 0.44, 0.78);
     eye.rotation.x = s * 0.10;
-    put(eye, -0.0885, 0.030, s * 0.036);  // surface here is -0.0894
+    put(eye, -0.0918, 0.030, s * 0.032);  // surface here is -0.0928
 
     // Brows do most of the expression. Thin and angled, not heavy bars.
     const brow = new THREE.Mesh(new RoundedBoxGeometry(0.011, 0.0065, 0.040, 2, 0.003), mat.brow);
     brow.rotation.x = s * 0.07;
-    brow.rotation.y = s * -0.16;
-    put(brow, -0.0838, 0.049, s * 0.037);  // surface here is -0.0846
+    brow.rotation.y = s * -0.13;
+    put(brow, -0.0878, 0.049, s * 0.033);  // surface here is -0.0887
 
     const ear = new THREE.Mesh(new THREE.SphereGeometry(0.021, 8, 6), mat.skin);
     ear.scale.set(0.34, 1.0, 0.60);
-    put(ear, 0.006, 0.012, s * 0.086);
+    put(ear, 0.006, 0.012, s * 0.075);
   }
 
   // Mouth: a shallow line on the jaw surface, with the faintest lower lip under it.
   const mouth = new THREE.Mesh(new RoundedBoxGeometry(0.008, 0.0055, 0.040, 2, 0.002), mat.mouth);
-  put(mouth, -0.0928, -0.040, 0);        // surface here is -0.0938
+  put(mouth, -0.0912, -0.040, 0);        // jaw surface here is -0.0921
   const lip = new THREE.Mesh(new THREE.SphereGeometry(0.017, 10, 8), mat.skin);
   lip.scale.set(0.26, 0.22, 0.80);
-  put(lip, -0.0895, -0.051, 0);
+  put(lip, -0.0882, -0.051, 0);
 
   // Hair: a shell swept back off the brow, with a nape behind so the crown is not
   // an open hemisphere from behind.
   const cap = new THREE.Mesh(
     new THREE.SphereGeometry(0.106, 16, 14, 0, Math.PI * 2, 0, Math.PI * 0.52), mat.hair);
-  cap.scale.set(0.96, 1.02, 0.96);
+  cap.scale.set(1.00, 1.02, 0.82);
   cap.rotation.z = -0.30;
   put(cap, 0.008, 0.030, 0);
 
   const nape = new THREE.Mesh(new THREE.SphereGeometry(0.096, 14, 12), mat.hair);
-  nape.scale.set(0.74, 0.92, 0.92);
+  nape.scale.set(0.78, 0.92, 0.80);
   put(nape, 0.038, 0.018, 0);
 
   return g;
@@ -214,22 +214,22 @@ export function buildPassenger({ style = 'toon', ramp = null, pose = 'seated' } 
   };
 
   // --- Torso ---
-  const pelvis = new THREE.Mesh(new RoundedBoxGeometry(0.30, 0.17, 0.22, 2, 0.055), mat.trouser);
+  const pelvis = new THREE.Mesh(new RoundedBoxGeometry(0.215, 0.17, 0.315, 2, 0.055), mat.trouser);
   pelvis.position.set(0, 0.045, 0);
   attach('pelvis', pelvis);
 
-  const abdomen = new THREE.Mesh(new RoundedBoxGeometry(0.28, 0.22, 0.20, 2, 0.06), mat.shirt);
+  const abdomen = new THREE.Mesh(new RoundedBoxGeometry(0.200, 0.22, 0.285, 2, 0.06), mat.shirt);
   abdomen.position.set(0, 0.10, 0);
   attach('spine', abdomen);
 
-  const chestMesh = new THREE.Mesh(new RoundedBoxGeometry(0.355, 0.26, 0.235, 2, 0.075), mat.shirt);
+  const chestMesh = new THREE.Mesh(new RoundedBoxGeometry(0.215, 0.26, 0.325, 2, 0.075), mat.shirt);
   chestMesh.position.set(-0.006, 0.105, 0);
   attach('chest', chestMesh);
 
   for (const s of [-1, 1]) {
     const delt = new THREE.Mesh(new THREE.SphereGeometry(0.056, 10, 8), mat.shirt);
-    delt.scale.set(0.80, 0.82, 0.95);
-    delt.position.set(-0.012, 0.130, s * 0.142);
+    delt.scale.set(0.86, 0.82, 0.90);
+    delt.position.set(-0.008, 0.128, s * 0.156);
     attach('chest', delt);
   }
 
