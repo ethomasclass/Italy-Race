@@ -107,6 +107,22 @@ earlier build cheated the floor up to the beltline and left only 0.72 m of
 headroom, which the passenger figure promptly exposed by putting his head through
 the headliner.
 
+## Posing the figure
+
+`src/props/passenger.js` is a hierarchy of empty joint Groups with geometry hung
+off them, so a pose is a table of rotations rather than a rebuild. `POSES` holds
+`seated`, `seatedSlouched`, `standing`, `leaning` and `atRoadside`; anything a pose
+omits stays at its rest value. Rest is standing with the arms down.
+
+Two things that cost real time and are worth knowing:
+
+- Abduction — swinging an arm out sideways — is rotation about **X**. Rotating the
+  shoulder about Z throws the arm forward instead, which had the figure hailing a
+  taxi rather than resting a forearm on the roof.
+- Facial features must be placed against the computed ellipsoid surface, not
+  eyeballed. An earlier pass had the mouth 8 mm inside the jaw and the iris 5 mm
+  proud of the eye; both are invisible in code and obvious on screen.
+
 ## Known limitations
 
 - No outline pass and no 1957 dither shader yet — the toon ramp is a placeholder for
