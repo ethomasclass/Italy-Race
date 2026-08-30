@@ -71,6 +71,22 @@ src/
 
 `window.__dbg` exposes the scene, road, terrain and vehicle for poking from the console.
 
+## Driving model
+
+Kinematic bicycle model, no rigid-body solver. Tuned to be unhurried rather than
+weak: 0–100 km/h in about 11 s, roughly 99 km/h on this leg's grades, 100–0 in
+about 56 m on drums. Rolling resistance is near-constant (as it is in reality)
+and engine output fades quadratically, so the last 20 km/h takes patience.
+
+The body rides a spring over the contact patch rather than being pinned to the
+ground, with a progressive bump stop — a hard travel clamp reads as a jolt
+precisely because it is a discontinuity. Terrain grades are low-passed before
+they reach body attitude for the same reason.
+
+`node` harnesses used to tune this live outside the repo, but the two checks worth
+repeating after any change are ride quality (RMS and peak vertical acceleration
+while driving the leg on autopilot) and the behaviour set above.
+
 ## Publishing
 
 `./artifact/build.sh` assembles `dist/his-fathers-car.html` — a single self-contained

@@ -45,7 +45,9 @@ export class Terrain {
   surfaceHeightAt(x, z) {
     const n = this.road.nearest(x, z);
     const off = this.road.surfaceOffset(n.lateral);
-    if (off !== null) return n.roadY + off;
+    // Evaluate the spline itself rather than the linear interpolation between
+    // samples: the car is the one thing that feels the slope kinks between them.
+    if (off !== null) return this.road.sample(n.distance).position.y + off;
     return this.heightAt(x, z);
   }
 

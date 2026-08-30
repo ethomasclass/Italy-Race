@@ -124,10 +124,30 @@ export class RoadPath {
 
     if (best < 0) return { distance: 0, lateral: 1e6, roadY: 0 };
 
-    const s = this.samples[best];
-    const dx = x - s.p.x, dz = z - s.p.z;
-    const lateral = dx * s.right.x + dz * s.right.z;
-    return { distance: s.d, lateral, roadY: s.p.y, index: best };
+    // Refine against the two segments meeting at that sample. Snapping to the
+    // sample itself quantises distance — and therefore road height — to the
+    // sample spacing, which the car feels as a staircase.
+    let bestSq2 = Infinity, distance = this.samples[best].d, lateral = 0, roadY = this.samples[best].p.y;
+    for (let i = Math.max(0, best - 1); i <= Math.min(best, this.samples.length - 2); i++) {
+      const a = this.samples[i], b = this.samples[i + 1];
+      const abx = b.p.x - a.p.x, abz = b.p.z - a.p.z;
+      const len2 = abx * abx + abz * abz;
+      if (len2 < 1e-9) continue;
+
+      const t = THREE.MathUtils.clamp(((x - a.p.x) * abx + (z - a.p.z) * abz) / len2, 0, 1);
+      const px = a.p.x + abx * t, pz = a.p.z + abz * t;
+      const dx = x - px, dz = z - pz;
+      const sq = dx * dx + dz * dz;
+      if (sq >= bestSq2) continue;
+
+      bestSq2 = sq;
+      distance = a.d + t * (b.d - a.d);
+      roadY = a.p.y + (b.p.y - a.p.y) * t;
+      const inv = 1 / Math.sqrt(len2);
+      lateral = dx * (-abz * inv) + dz * (abx * inv);
+    }
+
+    return { distance, lateral, roadY, index: best };
   }
 }
 
