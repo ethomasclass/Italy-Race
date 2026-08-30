@@ -22,7 +22,8 @@ const L = {
   wheelR: 0.29, wheelW: 0.175,
   archR: 0.44,
   rocker: 0.28,
-  floor: 0.44,
+  floor: 0.30,        // footwell pan, well below the door aperture
+  sillTop: 0.42,      // the rocker you step over to reach it
   cabinFront: 0.62, cabinRear: -1.20,
   bandTop: 0.52,
   greenhouseZ: 0.79,
@@ -46,8 +47,9 @@ function lowerBodyShape() {
   p.push([L.front, 0.34], [1.99, 0.55], [1.96, 0.70], [1.88, 0.765],
     [1.55, 0.80], [0.95, 0.855], [0.62, L.beltline]);
   // Drop into the cabin, run back along the floor, climb out at the parcel shelf.
-  // Extruding a notched profile gives a real footwell and an open cabin, which the
-  // cockpit camera needs; the door openings it leaves are closed by skins below.
+  // The notch bottom is the footwell pan, not the door sill: a real car puts the
+  // floor below the sill you step over, and that difference is the 0.12 m that lets
+  // a correctly-scaled adult sit under this roof.
   p.push([0.60, L.floor], [-1.16, L.floor], [-1.20, L.beltline]);
   // Beltline back over the shelf, then down the tail.
   p.push([-1.55, L.beltline], [-1.80, 0.86], [-1.94, 0.72], [L.rear, 0.50], [-1.95, 0.34]);
@@ -198,6 +200,15 @@ export function buildCar(ramp, {
     skin.position.set((L.cabinFront + L.cabinRear) / 2, (L.beltline + L.floor) / 2, side * (L.halfWidth - 0.004));
     skin.castShadow = true;
     group.add(skin);
+  }
+
+  // Sills, standing above the footwell pan on each side.
+  const sillGeo = new THREE.BoxGeometry(L.cabinFront - L.cabinRear, L.sillTop - L.floor, 0.085);
+  for (const side of [-1, 1]) {
+    const sill = new THREE.Mesh(sillGeo.clone(), bandMat);
+    sill.position.set((L.cabinFront + L.cabinRear) / 2, (L.sillTop + L.floor) / 2, side * 0.765);
+    sill.receiveShadow = true;
+    group.add(sill);
   }
 
   // --- Greenhouse: thin side panels, so the cabin is genuinely hollow ---

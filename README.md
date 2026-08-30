@@ -94,6 +94,19 @@ file with the whole Three.js bundle inlined, no CDN dependency. `artifact/shell-
 holds the title card and page chrome; `artifact/shell-tail.html` enables the start
 button once the scene module has finished building the leg.
 
+## Cabin section
+
+The interior is built around one datum: the seat H-point at 0.46 m. Everything the
+driver reads or reaches keys off the eye that follows from it (H-point + 0.75 m),
+so moving the seat moves the wheel, cluster, dash and radio together instead of
+drifting apart.
+
+The footwell pan sits at 0.30 m, well below the 0.42 m door sill you step over —
+that difference is what lets a correctly-scaled adult sit under a 1.42 m roof. An
+earlier build cheated the floor up to the beltline and left only 0.72 m of
+headroom, which the passenger figure promptly exposed by putting his head through
+the headliner.
+
 ## Known limitations
 
 - No outline pass and no 1957 dither shader yet — the toon ramp is a placeholder for
@@ -102,5 +115,7 @@ button once the scene module has finished building the leg.
   not for eight.
 - The cabin has no door-open state, no found-object interaction, and no radio
   behaviour beyond the head unit being modelled.
+- Seat backs are still flat slabs; the reference cars have rolled top edges and
+  visible seams.
 - Off-road handling is crude: reduced grip and more rolling resistance, nothing more.
 - Scatter is placed but never culled by distance; it will need LODs at eight-leg scale.
