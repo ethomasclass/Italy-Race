@@ -28,7 +28,9 @@ const C = {
   eyeWhite: 0xe8e2d6,
   iris: 0x3b2a1c,
   mouth: 0x8a5f4a,
-  shirt: 0xd6d0bd,
+  shirt: 0x3f4a57,      // dusty blue work shirt. The scene sun is tuned for the
+                        // exterior and multiplies through, so an in-cabin colour has to be
+                        // set two stops darker than it should look.
   trouser: 0x474751,
   hair: 0x2b2420,
   shoe: 0x2c2622,
@@ -102,6 +104,29 @@ export const POSES = {
   },
 };
 
+/**
+ * A torso section: an elliptical tube that tapers between two width/depth pairs.
+ * Rounded boxes gave the trunk hard vertical corners and a constant section — the
+ * two things that read as "blocky" no matter how large the fillet.
+ */
+function section(botW, botD, topW, topD, h, mat, seg = 16) {
+  const geo = new THREE.CylinderGeometry(0.5, 0.5, 1, seg, 4, false);
+  const pos = geo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const y = pos.getY(i);
+    const t = THREE.MathUtils.clamp(y + 0.5, 0, 1);
+    // Ease the taper so the waist is a curve rather than a cone.
+    const e = t * t * (3 - 2 * t);
+    pos.setX(i, pos.getX(i) * (botD + (topD - botD) * e));
+    pos.setZ(i, pos.getZ(i) * (botW + (topW - botW) * e));
+    pos.setY(i, y * h);
+  }
+  geo.computeVertexNormals();
+  const m = new THREE.Mesh(geo, mat);
+  m.castShadow = true;
+  return m;
+}
+
 function taper(len, rA, rB, mat, seg = 8) {
   const geo = new THREE.CylinderGeometry(rB, rA, len, seg, 1);
   geo.translate(0, -len / 2, 0);   // hangs from the joint, down its local -Y
@@ -164,18 +189,25 @@ function buildHead(mat) {
   lip.scale.set(0.26, 0.22, 0.80);
   put(lip, -0.0882, -0.051, 0);
 
-  // Hair: a shell swept back off the brow, with a nape behind so the crown is not
-  // an open hemisphere from behind.
-  const cap = new THREE.Mesh(
-    new THREE.SphereGeometry(0.106, 16, 14, 0, Math.PI * 2, 0, Math.PI * 0.52), mat.hair);
-  cap.scale.set(1.00, 1.02, 0.82);
-  cap.rotation.z = -0.30;
-  put(cap, 0.008, 0.030, 0);
+  // Crew cut. A sphere segment is rotationally symmetric, so it cannot have a high
+  // front hairline and short sides at once — the fix is to tilt it back, which
+  // rides the front edge up onto the forehead while the back drops below the ears.
+  // Solved rather than guessed: a y-scale of 0.86 made the shell shorter than the
+  // skull, so the crown poked through the hair. These values clear the crown at
+  // 0.129, land the hairline at 0.083 and drop the back to 0.024, just above the ear.
+  // A crew cut is close to rotationally symmetric — short all round — so the shell
+  // wants a small sweep and almost no tilt. A long sweep with a strong tilt reads
+  // as a mod cut instead, with the sides down over the ears.
+  // One shell does the whole cut. A Z-tilt moves only the front and back rims — the
+  // sides keep the untilted height — so a single tilted segment gives short sides
+  // above the ear, a hairline clear of the brows, and a back that tapers to the neck.
+  const cut = new THREE.Mesh(
+    new THREE.SphereGeometry(0.104, 18, 14, 0, Math.PI * 2, 0, Math.PI * 0.45), mat.hair);
+  cut.scale.set(1.00, 0.96, 0.88);
+  cut.rotation.z = -0.30;
+  put(cut, -0.002, 0.030, 0);   // crown 0.130, hairline 0.075, sides 0.045, back 0.014
 
-  const nape = new THREE.Mesh(new THREE.SphereGeometry(0.096, 14, 12), mat.hair);
-  nape.scale.set(0.78, 0.92, 0.80);
-  put(nape, 0.038, 0.018, 0);
-
+  // Short back and sides, clipped close.
   return g;
 }
 
@@ -214,16 +246,17 @@ export function buildPassenger({ style = 'toon', ramp = null, pose = 'seated' } 
   };
 
   // --- Torso ---
-  const pelvis = new THREE.Mesh(new RoundedBoxGeometry(0.215, 0.17, 0.315, 2, 0.055), mat.trouser);
+  const pelvis = section(0.300, 0.190, 0.295, 0.180, 0.18, mat.trouser);
   pelvis.position.set(0, 0.045, 0);
   attach('pelvis', pelvis);
 
-  const abdomen = new THREE.Mesh(new RoundedBoxGeometry(0.200, 0.22, 0.285, 2, 0.06), mat.shirt);
-  abdomen.position.set(0, 0.10, 0);
+  const abdomen = section(0.288, 0.178, 0.300, 0.182, 0.23, mat.shirt);
+  abdomen.position.set(0, 0.100, 0);
   attach('spine', abdomen);
 
-  const chestMesh = new THREE.Mesh(new RoundedBoxGeometry(0.215, 0.26, 0.325, 2, 0.075), mat.shirt);
-  chestMesh.position.set(-0.006, 0.105, 0);
+  // Widest across the chest, narrowing into the waist, and shallow front-to-back.
+  const chestMesh = section(0.298, 0.180, 0.322, 0.192, 0.27, mat.shirt);
+  chestMesh.position.set(-0.004, 0.100, 0);
   attach('chest', chestMesh);
 
   for (const s of [-1, 1]) {

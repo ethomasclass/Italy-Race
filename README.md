@@ -122,6 +122,9 @@ Two things that cost real time and are worth knowing:
 - Facial features must be placed against the computed ellipsoid surface, not
   eyeballed. An earlier pass had the mouth 8 mm inside the jaw and the iris 5 mm
   proud of the eye; both are invisible in code and obvious on screen.
+- Colours for anything inside the cabin have to be set roughly two stops darker
+  than they should look. The scene sun is tuned for the exterior at 2.35 and
+  multiplies straight through `MeshToonMaterial`, so a mid-tone shirt renders white.
 - The figure faces -X, so on every `RoundedBoxGeometry` the first argument is
   **depth** and the third is **width**. Getting those the wrong way round built a
   torso half again deeper than it was wide, and a head to match.
@@ -134,7 +137,5 @@ Two things that cost real time and are worth knowing:
   not for eight.
 - The cabin has no door-open state, no found-object interaction, and no radio
   behaviour beyond the head unit being modelled.
-- Seat backs are still flat slabs; the reference cars have rolled top edges and
-  visible seams.
 - Off-road handling is crude: reduced grip and more rolling resistance, nothing more.
 - Scatter is placed but never culled by distance; it will need LODs at eight-leg scale.

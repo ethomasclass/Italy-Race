@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 
 /**
  * Cabin. Modelled because the cockpit camera is a first-class view, not a bonus:
@@ -230,24 +231,66 @@ export function buildInstruments(group, ramp, L) {
     group.add(pedal);
   }
 
-  // Front seats: pedestal, squab, backrest, headrest.
-  for (const z of [DRIVER_Z, -DRIVER_Z]) {
+  // Front seats. The reference cars have a rolled top edge, raised side bolsters and
+  // a seamed centre panel — a plain slab reads as a cardboard box at cabin distance.
+  const seam = toon(0x8f6842);
+
+  function frontSeat(z) {
+    const seat = new THREE.Group();
+    seat.position.set(0, 0, z);
+    group.add(seat);
+
     const base = new THREE.Mesh(new THREE.BoxGeometry(0.42, HIP - 0.09 - FLOOR, 0.42), trim);
-    base.position.set(-0.28, (FLOOR + HIP - 0.09) / 2, z);
-    group.add(base);
-    const squab = new THREE.Mesh(new THREE.BoxGeometry(0.50, 0.09, 0.46), fabric);
-    squab.position.set(-0.28, HIP - 0.045, z);   // squab top lands exactly on the H-point
-    group.add(squab);
-    const back = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.60, 0.46), fabric);
-    back.position.set(-0.56, HIP + 0.30, z);
-    back.rotation.z = 0.15;
-    group.add(back);
-    const rest = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.14, 0.19), fabric);
-    rest.position.set(-0.65, HIP + 0.67, z);
-    group.add(rest);
+    base.position.set(-0.28, (FLOOR + HIP - 0.09) / 2, 0);
+    seat.add(base);
+
+    // Cushion: centre panel between two bolsters, with a rolled front edge.
+    const squab = new THREE.Mesh(new RoundedBoxGeometry(0.50, 0.075, 0.315, 2, 0.02), fabric);
+    squab.position.set(-0.28, HIP - 0.048, 0);
+    seat.add(squab);
+    for (const b of [-1, 1]) {
+      const bolster = new THREE.Mesh(new RoundedBoxGeometry(0.48, 0.095, 0.078, 2, 0.032), fabric);
+      bolster.position.set(-0.28, HIP - 0.040, b * 0.192);
+      seat.add(bolster);
+    }
+    const frontRoll = new THREE.Mesh(new THREE.CylinderGeometry(0.043, 0.043, 0.44, 12), fabric);
+    frontRoll.rotation.x = Math.PI / 2;
+    frontRoll.position.set(-0.045, HIP - 0.052, 0);
+    seat.add(frontRoll);
+
+    // Backrest, on the same rake as the seat.
+    const backGroup = new THREE.Group();
+    backGroup.position.set(-0.56, HIP + 0.30, 0);
+    backGroup.rotation.z = 0.15;
+    seat.add(backGroup);
+
+    backGroup.add(new THREE.Mesh(new RoundedBoxGeometry(0.105, 0.58, 0.315, 2, 0.022), fabric));
+    for (const b of [-1, 1]) {
+      const bolster = new THREE.Mesh(new RoundedBoxGeometry(0.135, 0.56, 0.078, 2, 0.034), fabric);
+      bolster.position.set(0.012, 0, b * 0.192);
+      backGroup.add(bolster);
+    }
+    for (const sy of [-0.16, 0.04, 0.22]) {
+      const line = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.010, 0.30), seam);
+      line.position.set(-0.052, sy, 0);
+      backGroup.add(line);
+    }
+    const topRoll = new THREE.Mesh(new THREE.CylinderGeometry(0.052, 0.052, 0.42, 12), fabric);
+    topRoll.rotation.x = Math.PI / 2;
+    topRoll.position.set(0.004, 0.285, 0);
+    backGroup.add(topRoll);
+
+    const rest = new THREE.Mesh(new RoundedBoxGeometry(0.10, 0.135, 0.185, 2, 0.035), fabric);
+    rest.position.set(-0.622, HIP + 0.662, 0);   // above the raked backrest top
+    seat.add(rest);
+    const stalk = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.06, 0.016), trim);
+    stalk.position.set(-0.612, HIP + 0.598, 0);
+    seat.add(stalk);
   }
 
-  // Rear bench and parcel shelf.
+  frontSeat(DRIVER_Z);
+  frontSeat(-DRIVER_Z);
+
   const rearBase = new THREE.Mesh(new THREE.BoxGeometry(0.44, HIP - 0.10 - FLOOR, 1.28), trim);
   rearBase.position.set(-1.00, (FLOOR + HIP - 0.10) / 2, 0);
   group.add(rearBase);
@@ -325,8 +368,8 @@ export function buildInstruments(group, ramp, L) {
 
   // Cabin fill. The roof shadows the interior almost completely, so without a
   // little bounce light the whole cockpit view reads as a black box.
-  const fill = new THREE.PointLight(0xffe9cc, 2.2, 5.5, 1.6);
-  fill.position.set(-0.25, 1.22, 0);
+  const fill = new THREE.PointLight(0xffe3c4, 1.05, 4.6, 1.8);
+  fill.position.set(-0.30, 1.16, 0);
   group.add(fill);
 
   // --- Live readouts ---
